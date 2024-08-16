@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 const EXCHANGE_RATE = 83; // 1 USD = 83 INR, replace with dynamic rate if needed
 
 interface Product {
-  id: string;
+  id: number; // Updated to number to match ProductsPage
   title: string;
   price: number;
   image: string;
@@ -36,7 +36,6 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       transition={{ duration: 0.2 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      onClick={handleAddToCart}
     >
       <div className="flex-grow overflow-hidden">
         <img
@@ -56,10 +55,12 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
             : "bg-purple-100 text-purple-700"
         }`}
         whileTap={{ scale: 0.95 }}
+        onClick={handleAddToCart} // Handle button click separately
       >
         {isHovered ? "Add to Cart" : "View Product"}
       </motion.button>
     </motion.div>
   );
 }
+
 export default ProductCard;

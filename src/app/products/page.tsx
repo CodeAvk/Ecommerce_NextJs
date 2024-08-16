@@ -1,4 +1,3 @@
-// src/app/products/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -9,17 +8,26 @@ import Footer from "../components/Footer"; // Import the Footer component
 import Loader from "../components/Loadingbar"; // Import the Loader component
 import { FaSearch, FaFilter } from "react-icons/fa"; // Import the icons
 
+interface Product {
+  id: number;
+  title: string;
+  price: number;
+  image: string;
+}
+
 function ProductsPage() {
   const { addToCart } = useCart();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortOption, setSortOption] = useState<string>("");
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await axios.get("https://fakestoreapi.com/products");
+        const { data } = await axios.get<Product[]>(
+          "https://fakestoreapi.com/products"
+        );
         setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -31,11 +39,11 @@ function ProductsPage() {
     fetchProducts();
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleSort = (e) => {
+  const handleSort = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSortOption(e.target.value);
   };
 
@@ -104,7 +112,9 @@ function ProductsPage() {
               <ProductCard
                 key={product.id}
                 product={product}
-                onAddToCart={addToCart}
+                onAddToCart={(product) =>
+                  addToCart({ ...product, quantity: 1 })
+                } // Ensure this matches your CartContext type
               />
             ))}
           </div>

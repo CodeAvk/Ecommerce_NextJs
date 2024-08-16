@@ -8,10 +8,18 @@ import Loader from "../components/Loader"; // Adjust path as per your project st
 import Navbar from "../components/Navbar"; // Ensure the correct import path
 import Footer from "../components/Footer"; // Ensure the correct import path
 
+// Define the User type
+interface User {
+  _id: string;
+  username: string;
+  email: string;
+  isAdmin: boolean;
+}
+
 function ProfilePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState<User | null>(null);
 
   useEffect(() => {
     getUserData();
@@ -106,4 +114,5 @@ function ProfilePage() {
     </div>
   );
 }
+
 export default ProfilePage;

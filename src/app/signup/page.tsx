@@ -1,8 +1,9 @@
 "use client";
+
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { FaUser, FaEnvelope, FaLock } from "react-icons/fa";
 
@@ -26,7 +27,7 @@ function SignUpPage() {
       toast.success(response.data.message);
       router.push("/login");
     } catch (error) {
-      if (error.response) {
+      if (error instanceof AxiosError && error.response) {
         const errorMessage =
           error.response.data.error || "Error during signup. Please try again.";
         toast.error(errorMessage);
@@ -119,4 +120,5 @@ function SignUpPage() {
     </div>
   );
 }
+
 export default SignUpPage;

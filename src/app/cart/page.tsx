@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import toast from "react-hot-toast";
+import Image from "next/image"; // Import Image component
 
 const EXCHANGE_RATE = 83; // 1 USD = 83 INR, replace with dynamic rate if needed
 
@@ -62,10 +63,12 @@ function CartPage() {
               key={item.id}
               className="flex justify-between items-center mb-4 border-b pb-4"
             >
-              <img
+              <Image
                 src={item.image}
                 alt={item.title}
-                className="w-20 h-20 object-cover"
+                width={80} // Set width
+                height={80} // Set height
+                className="object-cover"
               />
               <div className="flex-1 ml-4">
                 <h2 className="text-lg font-semibold">{item.title}</h2>

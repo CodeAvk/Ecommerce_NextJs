@@ -104,7 +104,7 @@ function LoginPage() {
               href="/signup"
               className="text-purple-300 hover:text-purple-500"
             >
-              Don't have an account? Sign Up
+              Don&apos;t have an account? Sign Up
             </Link>
           </div>
         </div>

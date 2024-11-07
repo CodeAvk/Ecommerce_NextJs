@@ -32,7 +32,7 @@ function LoginPage() {
         },
         error: "Invalid email or password. Please try again.",
       });
-      router.push("/products"); // Move the redirection here
+      router.push("/profile"); // Move the redirection here
     } catch (error: any) {
       console.error("Error during login", error);
       toast.error(error.message);

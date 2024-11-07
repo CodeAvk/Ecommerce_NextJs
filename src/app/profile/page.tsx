@@ -1,63 +1,129 @@
 "use client";
-
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { Toaster, toast } from "react-hot-toast";
 import { useState, useEffect } from "react";
-import Loader from "../components/Loader"; // Adjust path as per your project structure
-import Navbar from "../components/Navbar"; // Ensure the correct import path
-import Footer from "../components/Footer"; // Ensure the correct import path
+import Loader from "../components/Loader";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import TaskCard from "../components/TaskCard";
+import TimeTracker from "../components/TimeTracker";
+import TaskModal from "../components/TaskModal";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
-// Define the User type
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  isAdmin: boolean;
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  priority: "Low" | "Medium" | "High";
+  status: "Open" | "In Progress" | "Resolved";
+  assignee: string;
+  createdDate: string;
+  dueDate?: string;
+  timeSpent: number;
 }
 
-function ProfilePage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [userData, setUserData] = useState<User | null>(null);
+function Dashboard() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    priority: "All",
+    status: "All",
+    assignee: "All",
+  });
 
+  // Simulate loading and fetch tasks
   useEffect(() => {
-    getUserData();
+    const simulatedTasks: Task[] = [
+      {
+        id: "1",
+        title: "Fix login bug",
+        description: "Resolve issue with login timeout",
+        priority: "High",
+        status: "Open",
+        assignee: "John Doe",
+        createdDate: new Date().toISOString(),
+        dueDate: new Date(
+          new Date().getTime() + 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        timeSpent: 2,
+      },
+      {
+        id: "2",
+        title: "Update documentation",
+        description: "Add new API endpoints to the docs",
+        priority: "Medium",
+        status: "In Progress",
+        assignee: "Jane Smith",
+        createdDate: new Date().toISOString(),
+        dueDate: new Date(
+          new Date().getTime() + 14 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        timeSpent: 1,
+      },
+    ];
+    setTasks(simulatedTasks);
   }, []);
 
-  const onLogout = async () => {
-    setIsLoading(true);
-    try {
-      await axios.get("/api/users/logout");
-      toast.success("Logout Successful 😉");
-      console.log("Logging out...");
-      router.push("/login");
-    } catch (error) {
-      console.error("Failed to logout:", error);
-      toast.error("Failed to logout. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  // Create a new task
+  const createTask = (
+    newTask: Omit<Task, "id" | "createdDate" | "timeSpent">
+  ) => {
+    const task: Task = {
+      ...newTask,
+      id: (tasks.length + 1).toString(),
+      createdDate: new Date().toISOString(),
+      timeSpent: 0,
+    };
+    setTasks([...tasks, task]);
   };
 
-  const getUserData = async () => {
-    try {
-      const response = await axios.get("/api/users/me");
-      setUserData(response.data.data);
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
-      toast.error("Failed to fetch user data. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  // Edit an existing task
+  const editTask = (updatedTask: Task) => {
+    setTasks(
+      tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task))
+    );
   };
 
-  const handleCardClick = () => {
-    if (userData && userData.username) {
-      const encodedUsername = userData.username.replace(/\s+/g, "");
-      router.push(`/profile/${encodedUsername}`);
-    }
+  // Delete a task
+  const deleteTask = (taskId: string) => {
+    setTasks(tasks.filter((task) => task.id !== taskId));
   };
+
+  // Filter tasks based on user input
+  const filteredTasks = tasks.filter((task) => {
+    if (filters.priority !== "All" && task.priority !== filters.priority) {
+      return false;
+    }
+    if (filters.status !== "All" && task.status !== filters.status) {
+      return false;
+    }
+    if (filters.assignee !== "All" && task.assignee !== filters.assignee) {
+      return false;
+    }
+    return true;
+  });
+
+  // Prepare data for the trend line chart
+  const taskTrend = tasks.reduce((acc, task) => {
+    const date = new Date(task.createdDate).toLocaleDateString();
+    if (!acc[date]) {
+      acc[date] = 0;
+    }
+    acc[date]++;
+    return acc;
+  }, {} as { [key: string]: number });
+
+  const taskTrendData = Object.entries(taskTrend).map(([date, count]) => ({
+    date,
+    tasks: count,
+  }));
 
   if (isLoading) {
     return <Loader />;
@@ -67,52 +133,86 @@ function ProfilePage() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex flex-col items-center justify-center flex-1 py-2">
-        <h1 className="text-4xl mb-4">Profile Page</h1>
-        <button
-          onClick={onLogout}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
-        >
-          Logout
-        </button>
-        {userData ? (
-          <div
-            onClick={handleCardClick}
-            className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 max-w-md w-full cursor-pointer hover:shadow-lg transition-shadow duration-300"
-          >
-            <h2 className="text-2xl mb-4 text-center">User Profile</h2>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                User ID:
-              </label>
-              <p className="text-gray-700">{userData._id}</p>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Username:
-              </label>
-              <p className="text-gray-700">{userData.username}</p>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Email:
-              </label>
-              <p className="text-gray-700">{userData.email}</p>
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
-                Admin:
-              </label>
-              <p className="text-gray-700">{userData.isAdmin ? "Yes" : "No"}</p>
+        <h1 className="text-4xl mb-4">Dashboard</h1>
+        <div className="w-full max-w-4xl mb-4">
+          <div className="flex justify-between items-center">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Create New Task
+            </button>
+            <div className="flex space-x-4">
+              <select
+                value={filters.priority}
+                onChange={(e) =>
+                  setFilters({ ...filters, priority: e.target.value })
+                }
+                className="px-4 py-2 rounded bg-gray-800 text-white"
+              >
+                <option value="All">All Priorities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+                className="px-4 py-2 rounded bg-gray-800 text-white"
+              >
+                <option value="All">All Statuses</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+              <select
+                value={filters.assignee}
+                onChange={(e) =>
+                  setFilters({ ...filters, assignee: e.target.value })
+                }
+                className="px-4 py-2 rounded bg-gray-800 text-white"
+              >
+                <option value="All">All Assignees</option>
+                <option value="John Doe">John Doe</option>
+                <option value="Jane Smith">Jane Smith</option>
+              </select>
             </div>
           </div>
-        ) : (
-          <p>No user data available.</p>
-        )}
-        <Toaster />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredTasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onEdit={editTask}
+              onDelete={deleteTask}
+            />
+          ))}
+        </div>
+        <div className="w-full max-w-4xl mt-8">
+          <LineChart width={600} height={400} data={taskTrendData}>
+            <XAxis dataKey="date" />
+            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="tasks" stroke="#8884d8" />
+          </LineChart>
+        </div>
+        <div className="w-full max-w-2xl mt-8">
+          <TimeTracker tasks={tasks} onTimeLog={editTask} />
+        </div>
       </main>
       <Footer />
+      <TaskModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={createTask}
+      />
     </div>
   );
 }
 
-export default ProfilePage;
+export default Dashboard;
